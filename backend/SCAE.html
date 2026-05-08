@@ -1063,6 +1063,15 @@ function goTo(name) {
   if (name === 'dashboard') switchView('dash');
 }
 
+// Convierte "YYYY-MM-DD" a Date local sin desfase de zona horaria.
+// (new Date("YYYY-MM-DD") asume UTC, lo que en MX produce un día menos.)
+function parseFecha(s) {
+  if (!s) return new Date(NaN);
+  const parts = String(s).split('-').map(Number);
+  if (parts.length < 3 || parts.some(isNaN)) return new Date(s);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
 // ─── View switching ───
 function switchView(name) {
   ['dash','asistencia','reportes','empleados','pensiones'].forEach(v => {
@@ -1184,7 +1193,7 @@ function actualizarFiltroUI() {
     const esActivo = filtroMesActual && filtroMesActual.y === filtroAnio && filtroMesActual.m === i;
     // Contar registros de ese mes/año
     const count = registros.filter(r => {
-      const d = new Date(r.fecha);
+      const d = parseFecha(r.fecha);
       return d.getFullYear() === filtroAnio && d.getMonth() === i;
     }).length;
 
@@ -1241,7 +1250,7 @@ function renderReportes() {
   // Filtrar registros según mes seleccionado
   const lista = filtroMesActual
     ? registros.filter(r => {
-        const d = new Date(r.fecha);
+        const d = parseFecha(r.fecha);
         return d.getFullYear() === filtroMesActual.y && d.getMonth() === filtroMesActual.m;
       })
     : registros;
@@ -1292,7 +1301,7 @@ function renderReportes() {
     if (p.estatus !== 'Activa') return false;
     if (!filtroMesActual) return true;
     if (!p.inicio) return true;
-    const ini = new Date(p.inicio);
+    const ini = parseFecha(p.inicio);
     // Incluir si la pensión inició en o antes del último día del mes filtrado
     const ultimoDia = new Date(filtroMesActual.y, filtroMesActual.m + 1, 0);
     return ini <= ultimoDia;
@@ -1711,7 +1720,7 @@ function renderDashboard() {
 
   // ── Stat cards ──
   const regMes = registros.filter(r => {
-    const d = new Date(r.fecha);
+    const d = parseFecha(r.fecha);
     return d.getFullYear() === anioActual && d.getMonth() === mesActual;
   });
   const ingTalonarios = regMes.reduce((s,r) => s + (r.total||0), 0);
@@ -1741,14 +1750,14 @@ function renderDashboard() {
     // Calcular valores
     const datos = meses6.map(({m, y}) => {
       const tal = registros
-        .filter(r => { const d = new Date(r.fecha); return d.getFullYear()===y && d.getMonth()===m; })
+        .filter(r => { const d = parseFecha(r.fecha); return d.getFullYear()===y && d.getMonth()===m; })
         .reduce((s,r) => s + (r.total||0), 0);
       // Pensiones: cuota de activas que ya habían iniciado ese mes
       const ultimoDia = new Date(y, m+1, 0);
       const pen = pensiones.filter(p => {
         if (p.estatus !== 'Activa') return false;
         if (!p.inicio) return true;
-        return new Date(p.inicio) <= ultimoDia;
+        return parseFecha(p.inicio) <= ultimoDia;
       }).reduce((s,p) => s + (p.cuota||0), 0);
       return { tal, pen, total: tal + pen };
     });
@@ -1876,7 +1885,7 @@ function imprimirReporte(i) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
   const r = registros[i];
-  const fecha = new Date(r.fecha + 'T12:00:00');
+  const fecha = parseFecha(r.fecha);
   const diasNombre  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const mesesNombre = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const fechaStr    = diasNombre[fecha.getDay()] + ', ' + fecha.getDate() + ' de ' + mesesNombre[fecha.getMonth()] + ' de ' + fecha.getFullYear();
@@ -1885,7 +1894,7 @@ function imprimirReporte(i) {
   const penActivas  = pensiones.filter(p => {
     if (p.estatus !== 'Activa') return false;
     if (!p.inicio) return true;
-    return new Date(p.inicio + 'T12:00:00') <= fecha;
+    return parseFecha(p.inicio) <= fecha;
   });
   const totalPen  = penActivas.reduce((s,p) => s+(p.cuota||0), 0);
   const total     = r.total  || 0;
