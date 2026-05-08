@@ -26,10 +26,11 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 
 // ─── Servir el frontend (SCAE.html) ───
-// El archivo HTML se sirve desde la carpeta padre (../).
-app.use(express.static(path.join(__dirname, '..')));
+// SCAE.html vive junto a server.js para que el deploy en Railway
+// (que solo copia el contenido de backend/) lo encuentre.
+app.use(express.static(__dirname));
 app.get('/', (_req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'SCAE.html'));
+  res.sendFile(path.join(__dirname, 'SCAE.html'));
 });
 
 // ─── Ping de salud ───
