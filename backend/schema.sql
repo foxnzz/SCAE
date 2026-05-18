@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS registros (
 ) ENGINE=InnoDB;
 
 -- ─────────────────────────────────────────────
--- (Opcional) Datos de ejemplo — bórralos si no los quieres
+-- (Opcional) Datos de ejemplo
 -- ─────────────────────────────────────────────
 INSERT INTO empleados (nombre, ingreso, dias, estatus) VALUES
   ('Nick G',        '2023-04-03', 'Martes | Jueves',   'Activo'),
