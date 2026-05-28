@@ -2105,7 +2105,7 @@ async function apiCall(path, opts) {
   if (res.status === 401) {
     setToken(null);
     if (typeof goTo === 'function') goTo('login');
-    throw new Error('Credenciales incorrectas');
+    throw new Error('Sesión expirada');
   }
   let data = null;
   try { data = await res.json(); } catch (_) { /* sin cuerpo */ }
