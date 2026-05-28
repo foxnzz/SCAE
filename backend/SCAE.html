@@ -1123,7 +1123,16 @@ function avatarColor(name) {
   return colors[h];
 }
 function initials(name) {
-  return name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+  if (!name) return '?';
+  return String(name).split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+}
+
+// Convierte "YYYY-MM-DD" → "DD/MM/YYYY" tolerando valores nulos / inválidos.
+function fechaCorta(s) {
+  if (!s) return '—';
+  const parts = String(s).split('-');
+  if (parts.length !== 3) return s;
+  return parts.reverse().join('/');
 }
 
 // ══════════════════════════════════
@@ -1274,7 +1283,7 @@ function renderReportes() {
     totSuel += r.sueldo||0;
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${r.fecha.split('-').reverse().join('/')}</td>
+      <td>${fechaCorta(r.fecha)}</td>
       <td>${r.empleado}</td>
       <td>${r.ini}</td><td>${r.fin}</td>
       <td>${fmt(r.total)}</td>
@@ -1413,7 +1422,7 @@ function renderEmpleados() {
       <div class="emp-name">${e.nombre}</div>
       <span class="badge ${e.estatus==='Activo'?'badge-green':'badge-amber'}">${e.estatus}</span>
       <div class="emp-days">${e.dias}</div>
-      <div class="emp-since">Desde: ${e.ingreso.split('-').reverse().join('/')}</div>
+      <div class="emp-since">Desde: ${fechaCorta(e.ingreso)}</div>
       <div style="display:flex;gap:6px;margin-top:8px;">
         <button onclick="editarEmpleado(${i})" style="padding:4px 10px;font-size:11px;border:1.5px solid var(--blue-200);background:var(--blue-50);color:var(--blue-700);border-radius:6px;cursor:pointer;font-family:inherit;">✏️ Editar</button>
         <button onclick="confirmarEliminar('empleado',${i})" style="padding:4px 10px;font-size:11px;border:1.5px solid var(--red-100);background:var(--red-100);color:var(--red-600);border-radius:6px;cursor:pointer;font-family:inherit;">🗑️</button>
@@ -1426,7 +1435,7 @@ function renderEmpleados() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="font-weight:500">${e.nombre}</td>
-      <td>${e.ingreso.split('-').reverse().join('/')}</td>
+      <td>${fechaCorta(e.ingreso)}</td>
       <td><span class="badge ${e.estatus==='Activo'?'badge-green':'badge-amber'}">${e.estatus}</span></td>
       <td>${e.dias}</td>
       <td>
@@ -1640,7 +1649,7 @@ function renderPensiones() {
       <td><strong style="letter-spacing:0.05em">${p.placas.toUpperCase()}</strong></td>
       <td>${p.tipo}</td>
       <td>${p.tel||'—'}</td>
-      <td>${p.inicio ? p.inicio.split('-').reverse().join('/') : '—'}</td>
+      <td>${fechaCorta(p.inicio)}</td>
       <td style="font-weight:600;color:var(--blue-600)">${fmt(p.cuota)}</td>
       <td style="color:var(--gray-500);font-size:12px">${p.notas||'—'}</td>
       <td><span class="badge ${p.estatus==='Activa'?'badge-green':'badge-amber'}">${p.estatus}</span></td>
@@ -1870,8 +1879,8 @@ function renderDashboard() {
     empLista.innerHTML = empleados.slice(0,5).map(e => `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--gray-100);">
         <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:28px;height:28px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;">${e.nombre.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase()}</div>
-          <span style="font-size:13px;color:var(--gray-700)">${e.nombre}</span>
+          <div style="width:28px;height:28px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;">${initials(e.nombre)}</div>
+          <span style="font-size:13px;color:var(--gray-700)">${e.nombre || '—'}</span>
         </div>
         <span class="badge ${e.estatus==='Activo'?'badge-green':'badge-amber'}" style="font-size:10px;">${e.estatus}</span>
       </div>`).join('');
